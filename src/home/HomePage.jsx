@@ -5,10 +5,10 @@ const HomePage = () => {
     const navigate = useNavigate();
     return (
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
-            <h1>Clinica Visionex</h1>
+            <h1>Smart Condominium</h1>
             <button
                 style={{ marginTop: 20, padding: '10px 24px', fontSize: 16, borderRadius: 6, background: '#1976d2', color: '#fff', border: 'none', cursor: 'pointer' }}
-                onClick={() => navigate('/login')}
+                onClick={() => navigate('/adminlayout')}
             >
                 Ir a Login
             </button>

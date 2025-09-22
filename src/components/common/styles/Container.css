@@ -1,0 +1,26 @@
+.main-container {
+  margin-left: 280px; /* Mismo ancho que el sidebar */
+  padding: 20px;
+  background-color: #f5f7f9;
+  min-height: calc(100vh - 120px); /* Resta la altura del header y footer */
+  margin-top: 70px; /* Altura del header */
+  transition: margin-left 0.3s ease;
+}
+
+.content-wrapper {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Cuando el sidebar esté colapsado en móviles */
+@media (max-width: 768px) {
+  .main-container {
+    margin-left: 0;
+    padding: 15px;
+    margin-top: 60px;
+  }
+  
+  .sidebar.open ~ .main-container {
+    margin-left: 240px;
+  }
+}
