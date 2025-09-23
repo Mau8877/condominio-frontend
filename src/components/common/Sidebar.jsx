@@ -1,11 +1,33 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { ChevronDown } from "lucide-react"; // Solo importamos los iconos necesarios
 import "./styles/Sidebar.css";
 
 export default function Sidebar({ menuPackages }) {
   const location = useLocation();
   const [openPackages, setOpenPackages] = useState({});
   const [openSide, setOpenSide] = useState(false);
+  const sidebarRef = useRef(null);
+
+  // Cerrar sidebar al hacer clic fuera o al cambiar de ruta
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        sidebarRef.current &&
+        !sidebarRef.current.contains(event.target) &&
+        !event.target.classList.contains("hamburger-btn")
+      ) {
+        setOpenSide(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    setOpenSide(false);
+  }, [location.pathname]);
 
   const togglePackage = (packageName) => {
     setOpenPackages((prev) => ({
@@ -18,14 +40,8 @@ export default function Sidebar({ menuPackages }) {
     setOpenSide(!openSide);
   };
 
-  // Función para verificar si la ruta está activa
   const isActive = (path) => {
-    // Para la ruta por defecto (index)
-    if (path === "" && location.pathname.endsWith("/AdminLayout")) {
-      return true;
-    }
-
-    // Para rutas hijas
+    // La lógica de isActive sigue funcionando para las subrutas
     return (
       location.pathname.endsWith(`/AdminLayout/${path}`) ||
       location.pathname.endsWith(`/AdminLayout/${path}/`)
@@ -39,46 +55,22 @@ export default function Sidebar({ menuPackages }) {
         onClick={toggleSidebar}
         aria-label="Toggle menu"
       >
-        ☰
+        <span />
+        <span />
+        <span />
       </button>
-      {openSide && (
-        <div
-          className="sidebar-overlay"
-          onClick={toggleSidebar}
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            width: "100vw",
-            height: "100vh",
-            background: "rgba(0,0,0,0.3)",
-            zIndex: 899,
-          }}
-        />
-      )}
-      <aside className={`sidebar ${openSide ? "open" : ""}`}>
+
+      {openSide && <div className="sidebar-overlay" onClick={toggleSidebar} />}
+
+      <aside className={`sidebar ${openSide ? "open" : ""}`} ref={sidebarRef}>
         <div className="sidebar-header">
-          <h2
-            style={{ textAlign: "center", color: "black", fontWeight: "bold" }}
-          >
-            Panel de Administración
-          </h2>
+          {/* Título más compacto */}
+          <h2 className="sidebar-title">Panel de Administración</h2>
         </div>
 
         <nav className="sidebar-nav">
           <ul className="sidebar-menu">
-            {/* Enlace al dashboard (ruta por defecto) */}
-            <li className="sidebar-item">
-              <Link
-                to=""
-                className={`sidebar-link ${
-                  location.pathname.endsWith("/AdminLayout") ? "active" : ""
-                }`}
-              >
-                <span className="sidebar-icon">-</span>
-                <span className="sidebar-label">Dashboard</span>
-              </Link>
-            </li>
+            {/* El botón de Dashboard ha sido eliminado */}
 
             {menuPackages.map((pkg, index) => (
               <li key={index} className="sidebar-package">
@@ -87,13 +79,12 @@ export default function Sidebar({ menuPackages }) {
                   onClick={() => togglePackage(pkg.name)}
                 >
                   <span className="package-name">{pkg.name}</span>
-                  <span
+                  <ChevronDown
+                    size={16}
                     className={`package-arrow ${
                       openPackages[pkg.name] ? "open" : ""
                     }`}
-                  >
-                    ▼
-                  </span>
+                  />
                 </div>
 
                 <ul

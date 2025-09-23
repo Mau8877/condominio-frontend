@@ -1,133 +1,306 @@
-.header-container {
+@import "../../../palette.css";
+
+/* HEADER PRINCIPAL */
+.header {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  align-items: center;
-  padding: 1rem 2rem;
-  background-color: #2c3e50;
-  color: white;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  position: fixed;
-  width: 100%;
-  top: 0;
-  z-index: 1000;
+  padding: 0 2rem;
   height: 70px;
-  box-sizing: border-box;
-}
-@media (max-width: 768px) {
-  .header-container {
-    padding: 1rem;
-    flex-direction: column;
-    gap: 1rem;
-  }
-
-  /* Cambia a fila en móvil */
-  .header-right {
-    flex-direction: row !important;
-    gap: 0.5rem;
-    width: 100%;
-    justify-content: flex-start;
-    align-items: center;
-  }
-
-  .dropdown-menu {
-    right: auto;
-    left: 0;
-  }
+  background: var(--color-background-primary);
+  border-bottom: 1px solid var(--color-border-light);
+  box-shadow: 0 2px 8px var(--color-shadow-light);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  width: 100%;
 }
 
-/* Ajustamos el resto del CSS del header para que funcione con altura fija */
-.header-left, .header-right {
+/* MARCA (Logo + Título) */
+.header__brand {
   display: flex;
   align-items: center;
-}
-
-.header-title {
-  margin: 0;
-  font-size: 1.5rem;
-  font-weight: 600;
-}
-
-.welcome-text {
-  font-size: 1rem;
-  color: #ecf0f1;
-}
-
-.dropdown {
-  position: relative;
-  display: inline-block;
-}
-
-.header-button {
-  background-color: #3498db;
-  color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
+  gap: 1rem;
   cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+}
+
+.header__brand:hover {
+  background: var(--color-background-secondary);
+  transform: translateY(-1px);
+}
+
+.header__logo {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+}
+
+.header__logo-icon {
+  color: var(--color-primary-500);
+}
+
+.header__title {
+  color: var(--color-text-primary);
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0;
+  white-space: nowrap;
+}
+
+/* MENÚ DE USUARIO */
+.header__user-menu {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  font-size: 0.9rem;
-  transition: background-color 0.3s;
+  gap: 1.25rem;
 }
 
-.header-button:hover {
-  background-color: #2980b9;
+.header__welcome {
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  white-space: nowrap;
 }
 
-.dropdown-arrow {
-  font-size: 0.7rem;
-  transition: transform 0.3s;
+/* DROPDOWN DE USUARIO */
+.user-dropdown {
+  position: relative;
 }
 
-.dropdown-arrow.open {
+/* BOTÓN ACTIVADOR */
+.user-dropdown__trigger {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 2 / 2;
+  background: var(--color-background-primary);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.user-dropdown__trigger:hover {
+  background: var(--color-background-secondary);
+  border-color: var(--color-primary-300);
+  transform: scale(0.95);
+}
+
+.user-dropdown__trigger--open {
+  background: var(--color-primary-50);
+  border-color: var(--color-primary-300);
+}
+
+/* ICONO DE LA TUERCA */
+.user-dropdown__icon {
+  color: var(--color-text-secondary);
+  transition: all 0.5s ease;
+}
+
+.user-dropdown__trigger:hover .user-dropdown__icon {
+  color: var(--color-primary-500);
+  transform: rotate(45deg);
+}
+
+.user-dropdown__trigger--open .user-dropdown__icon {
+  color: var(--color-primary-500);
   transform: rotate(180deg);
 }
 
-.dropdown-menu {
+/* MENÚ DESPLEGABLE */
+.user-dropdown__menu {
   position: absolute;
   top: 100%;
   right: 0;
-  background-color: white;
-  border-radius: 4px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  min-width: 150px;
-  margin-top: 0.5rem;
+  margin-top: 0.75rem;
+  background: var(--color-background-primary);
+  border: 1px solid var(--color-border-light);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px var(--color-shadow-medium);
+  min-width: 240px;
+  z-index: 1001;
   overflow: hidden;
-  z-index: 1000;
+  animation: dropdownSlide 0.3s ease;
 }
 
-.dropdown-item {
+@keyframes dropdownSlide {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* HEADER DEL DROPDOWN */
+.user-dropdown__header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: var(--color-background-secondary);
+}
+
+.user-dropdown__avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--color-primary-500);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.user-dropdown__info {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-dropdown__name {
+  font-weight: 600;
+  color: var(--color-text-primary);
+  font-size: 0.875rem;
+}
+
+.user-dropdown__role {
+  color: var(--color-text-tertiary);
+  font-size: 0.75rem;
+}
+
+.user-dropdown__divider {
+  height: 1px;
+  background: var(--color-border-light);
+  margin: 0.25rem 0;
+}
+
+/* ITEMS DEL MENÚ */
+.user-dropdown__item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
   width: 100%;
-  text-align: left;
   padding: 0.75rem 1rem;
-  border: none;
   background: none;
-  color: #2c3e50;
+  border: none;
+  color: var(--color-text-primary);
+  font-size: 0.875rem;
   cursor: pointer;
-  font-size: 0.9rem;
-  transition: background-color 0.2s;
+  transition: all 0.3s ease;
 }
 
-.dropdown-item:hover {
-  background-color: #f5f5f5;
+.user-dropdown__item:hover {
+  background: var(--color-background-secondary);
 }
 
-/* Responsive */
+.user-dropdown__item-icon {
+  color: var(--color-text-tertiary);
+  transition: all 0.3s ease;
+}
+
+.user-dropdown__item:hover .user-dropdown__item-icon {
+  color: var(--color-primary-500);
+}
+
+/* ITEM DE CERRAR SESIÓN ESPECÍFICO */
+.user-dropdown__item--logout {
+  color: var(--color-error); /* Esto afecta al texto */
+}
+
+/* ESTILO AGREGADO/MODIFICADO */
+.user-dropdown__item--logout .user-dropdown__item-icon {
+  color: var(
+    --color-error
+  ); /* ¡Esto es lo nuevo! Aplica el color rojo al icono */
+}
+
+.user-dropdown__item--logout:hover {
+  background: var(--color-error);
+  color: var(--color-background-primary);
+}
+
+.user-dropdown__item--logout:hover .user-dropdown__item-icon {
+  color: var(--color-background-primary) !important;
+}
+
+.user-dropdown__item--logout:hover span {
+  color: var(--color-background-primary);
+}
+
+/* RESPONSIVE */
 @media (max-width: 768px) {
-  .header-container {
-    padding: 1rem;
-    flex-direction: column;
-    gap: 1rem;
+  .header {
+    padding: 0 1rem;
+    height: 60px;
+  }
+
+  .header__title {
+    font-size: 1.125rem;
+  }
+
+  .header__welcome {
+    /* Mantiene esta regla para ocultar el nombre */
+    display: none; 
+  }
+
+  .header__logo,
+  .header__logo-icon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .header__brand {
+    gap: 0.75rem;
+  }
+
+  /*
+    Elimina las reglas width y height aquí.
+    El `aspect-ratio` del botón se encargará de mantenerlo cuadrado.
+  */
+  .user-dropdown__trigger {
+    padding: 10px; /* Usa padding para el tamaño */
   }
   
-  .header-right {
-    flex-direction: column;
-    gap: 0.5rem;
+  /* Se asegura que el ícono tenga un tamaño fijo y no se vea como un "puntito".
+    La unidad `em` lo hace escalable.
+  */
+  .user-dropdown__icon {
+    font-size: 20px;
   }
-  
-  .dropdown-menu {
-    right: auto;
-    left: 0;
+
+  .user-dropdown__menu {
+    min-width: 200px;
+  }
+}
+
+@media (max-width: 480px) {
+  .header {
+    padding: 0 0.75rem;
+  }
+
+  .header__title {
+    font-size: 1rem;
+  }
+
+  .user-dropdown__trigger {
+    padding: 8px;
+  }
+
+  .user-dropdown__icon {
+    font-size: 18px;
+  }
+
+  .user-dropdown__menu {
+    min-width: 180px;
+    right: -0.5rem;
+  }
+
+  .user-dropdown__header {
+    padding: 0.75rem;
   }
 }

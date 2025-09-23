@@ -2,7 +2,7 @@
   margin-left: 280px; /* Mismo ancho que el sidebar */
   padding: 20px;
   background-color: #f5f7f9;
-  min-height: calc(100vh - 120px); /* Resta la altura del header y footer */
+  min-height: 100vh;
   margin-top: 70px; /* Altura del header */
   transition: margin-left 0.3s ease;
 }
@@ -13,7 +13,7 @@
 }
 
 /* Cuando el sidebar esté colapsado en móviles */
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .main-container {
     margin-left: 0;
     padding: 15px;
