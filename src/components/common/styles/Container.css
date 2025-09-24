@@ -1,7 +1,9 @@
+@import "../../../palette.css";
+
 .main-container {
   margin-left: 280px;
   padding: 20px;
-  background-color: #0080ff;
+  background-color: var(--color-background-quaternary);
   height: calc(100vh - 70px);
   margin-top: 70px;
   transition: margin-left 0.3s ease;
