@@ -1,0 +1,41 @@
+@import '../../palette.css';
+
+.breadcrumb-container {
+  padding: var(--spacing-md) var(--spacing-xl);
+  background-color: transparent;
+}
+
+.breadcrumb-list {
+  display: flex;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.breadcrumb-item {
+  display: flex;
+  align-items: center;
+  font-size: var(--font-size-sm);
+}
+
+.breadcrumb-separator {
+  margin: 0 var(--spacing-xs);
+  color: var(--color-text-tertiary);
+}
+
+.breadcrumb-link {
+  color: var(--color-primary-600);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.breadcrumb-link:hover {
+  color: var(--color-primary-800);
+  text-decoration: underline;
+}
+
+.breadcrumb-current {
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}

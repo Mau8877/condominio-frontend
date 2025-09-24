@@ -1,0 +1,14 @@
+@import '../../palette.css';
+
+.grid-status {
+  text-align: center;
+  padding: var(--spacing-xl);
+  color: var(--color-text-secondary);
+  background-color: var(--color-background-primary);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-elevated);
+}
+
+.grid-status.error {
+  color: var(--color-error);
+}
