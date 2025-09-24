@@ -50,8 +50,6 @@ export default function Header({ logo, title, userName, navigation = "/" }) {
 
       {/* Menú de usuario */}
       <div className="header__user-menu" ref={dropdownRef}>
-        <span className="header__welcome">Bienvenido, {userName}</span>
-
         <div className="user-dropdown">
           <button
             className={`user-dropdown__trigger ${
