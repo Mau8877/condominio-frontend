@@ -1,110 +1,126 @@
-import React from "react";
-import { useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import PageHeader from "../components/PageHeader";
 import DataGrid from "../components/DataGrid";
-import Breadcrumb from "../components/Breadcrumb";
+import AdvancedPagination from "../components/AdvancedPagination";
+import { mockUsers } from "../../mockData";
+import { getNestedValue, sortData } from "../utils/dataUtils";
 
 const userColumns = [
-  {
-    key: "id",
-    label: "ID",
-    sortable: true,
-    width: "80px",
-  },
-  {
-    key: "name",
-    label: "Nombre",
-    sortable: true,
-  },
-  {
-    key: "email",
-    label: "Email",
-    sortable: true,
-  },
-  {
-    key: "address.city", // Key anidada
-    label: "Ciudad",
-    sortable: true,
-  },
-  {
-    key: "company.name", // Key anidada
-    label: "Compañía",
-    sortable: false, // Esta columna no se puede ordenar
-  },
+  { key: "id", label: "ID", sortable: true, width: "80px" },
+  { key: "name", label: "Nombre", sortable: true },
+  { key: "email", label: "Email", sortable: true },
+  { key: "address.city", label: "Ciudad", sortable: true },
+  { key: "company.name", label: "Compañía", sortable: true },
 ];
 
 const GestionarUsuario = () => {
-  const API_URL = "https://jsonplaceholder.typicode.com/users";
+  const [loading, setLoading] = useState(true);
+  const [allData, setAllData] = useState([]);
+  const [error, setError] = useState(null);
 
-  // Estado para la vista actual
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortConfig, setSortConfig] = useState({
+    key: "id",
+    direction: "ascending",
+  });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(20);
   const [view, setView] = useState("grid");
+  const [breadcrumbs, setBreadcrumbs] = useState([
+    { label: "Usuarios", link: "/users" },
+    { label: "Listado" },
+  ]);
 
-  // Estado para los breadcrumbs
-  const baseBreadcrumbs = [{ label: "Usuarios" }];
-  const [breadcrumbs, setBreadcrumbs] = useState(baseBreadcrumbs);
+  // --- EFECTOS ---
+  useEffect(() => {
+    // Simula la carga de datos desde una API
+    setLoading(true);
+    setTimeout(() => {
+      setAllData(mockUsers);
+      setLoading(false);
+    }, 1000); // 1 segundo de delay
+  }, []);
 
-  const handleAddNew = () => {
-    setBreadcrumbs([...baseBreadcrumbs, { label: "Añadir Nuevo" }]);
-    alert("Acción: Añadir nuevo usuario");
-  };
+  // --- DATOS MEMOIZADOS (PARA RENDIMIENTO) ---
+  const filteredData = useMemo(() => {
+    if (!searchTerm) return allData;
+    return allData.filter(
+      (user) =>
+        Object.values(user).some((value) =>
+          String(value).toLowerCase().includes(searchTerm.toLowerCase())
+        ) ||
+        String(user.address.city)
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
+        String(user.company.name)
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase())
+    );
+  }, [allData, searchTerm]);
 
-  const handleEdit = (user) => {
-    setBreadcrumbs([...baseBreadcrumbs, { label: `Editar: ${user.name}` }]);
-    alert(`Acción: Editar usuario con ID ${user.id}`);
-  };
+  const sortedData = useMemo(() => {
+    return sortData(filteredData, sortConfig);
+  }, [filteredData, sortConfig]);
 
-  const handleDelete = (userId) => {
-    if (
-      window.confirm(
-        `¿Seguro que quieres eliminar al usuario con ID ${userId}?`
-      )
-    ) {
-      alert(`Acción: Eliminar usuario con ID ${userId}`);
+  const paginatedData = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return sortedData.slice(startIndex, startIndex + itemsPerPage);
+  }, [sortedData, currentPage, itemsPerPage]);
+
+  const totalPages = Math.ceil(sortedData.length / itemsPerPage);
+
+  // --- HANDLERS ---
+  const handleSort = (key) => {
+    let direction = "ascending";
+    if (sortConfig.key === key && sortConfig.direction === "ascending") {
+      direction = "descending";
     }
+    setSortConfig({ key, direction });
+    setCurrentPage(1);
   };
 
-  const handleReport = () => {
-    setBreadcrumbs([...baseBreadcrumbs, { label: "Generar Reporte" }]);
-    alert("Acción: Generar reporte");
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+    setCurrentPage(1);
   };
 
-  const handleViewChange = (newView) => {
-    setView(newView);
-    setBreadcrumbs(baseBreadcrumbs); // Reset breadcrumbs al cambiar de vista
+  const handleItemsPerPageChange = (value) => {
+    setItemsPerPage(value);
+    setCurrentPage(1);
   };
 
   return (
-    <div style={{ padding: "0" }}>
-      <Breadcrumb items={breadcrumbs} />
-      <div style={{ padding: "0 var(--spacing-xl)" }}>
-        <PageHeader
-          title="Gestión de Usuarios"
-          onAdd={handleAddNew}
-          onReport={handleReport}
-          currentView={view}
-          onViewChange={handleViewChange}
+    <div style={{ padding: "0 var(--spacing-xl)" }}>
+      <PageHeader
+        title="Gestión de Usuarios"
+        breadcrumbs={breadcrumbs}
+        searchTerm={searchTerm}
+        onSearchChange={handleSearchChange}
+        currentView={view}
+        onViewChange={setView}
+        onAdd={() => alert("Añadir...")}
+        onReport={() => alert("Reporte...")}
+      />
+      <DataGrid
+        loading={loading}
+        error={error}
+        data={paginatedData}
+        columns={userColumns}
+        sortConfig={sortConfig}
+        onSort={handleSort}
+        onEdit={(user) => alert(`Editando ${user.name}`)}
+        onDelete={(id) => alert(`Eliminando ID ${id}`)}
+      />
+      {!loading && sortedData.length > 0 && (
+        <AdvancedPagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalItems={sortedData.length}
+          itemsPerPage={itemsPerPage}
+          onPageChange={setCurrentPage}
+          onItemsPerPageChange={handleItemsPerPageChange}
         />
-        {view === "grid" ? (
-          <DataGrid
-            apiUrl={API_URL}
-            columns={userColumns}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-          />
-        ) : (
-          // Aquí iría el componente de vista de tarjetas cuando se implemente
-          <div
-            style={{
-              padding: "2rem",
-              textAlign: "center",
-              backgroundColor: "var(--color-background-primary)",
-              borderRadius: "var(--border-radius-lg)",
-            }}
-          >
-            <h2>Vista de Tarjetas (Próximamente)</h2>
-          </div>
-        )}
-      </div>
+      )}
     </div>
   );
 };
