@@ -8,7 +8,7 @@ const HomePage = () => {
             <h1>Smart Condominium</h1>
             <button
                 style={{ marginTop: 20, padding: '10px 24px', fontSize: 16, borderRadius: 6, background: '#1976d2', color: '#fff', border: 'none', cursor: 'pointer' }}
-                onClick={() => navigate('/adminlayout')}
+                onClick={() => navigate('/login')}
             >
                 Ir a Login
             </button>

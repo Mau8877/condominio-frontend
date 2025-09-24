@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Building, Settings, LogOut, User, UserPen } from "lucide-react";
 import "./styles/Header.css";
 
-export default function Header({ logo, title, userName, navigation = "/" }) {
+export default function Header({ logo, title, userName, rol, navigation = "/" }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
   const dropdownRef = useRef(null);
@@ -70,7 +70,7 @@ export default function Header({ logo, title, userName, navigation = "/" }) {
                 </div>
                 <div className="user-dropdown__info">
                   <span className="user-dropdown__name">{userName}</span>
-                  <span className="user-dropdown__role">Administrador</span>
+                  <span className="user-dropdown__role">{rol}</span>
                 </div>
               </div>
 

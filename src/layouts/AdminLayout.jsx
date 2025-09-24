@@ -172,12 +172,16 @@ const menuPackages = [
 ];
 
 export default function AdminLayout() {
+  const usuario = JSON.parse(localStorage.getItem("usuario"));
+  const nombre = usuario.nombre;
+  const rol = usuario.rol.nombre;
   return (
     <div className="AdminLayout-container">
       <Header
         logo={logo}
         title="Smart Condominium"
-        userName="Juan"
+        userName={nombre}
+        rol={rol}
         navigation="/adminlayout"
       />
       <Sidebar menuPackages={menuPackages} />

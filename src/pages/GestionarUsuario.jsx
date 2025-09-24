@@ -1,99 +1,124 @@
-import React, { useState, useEffect, useMemo } from "react";
+// src/pages/GestionarUsuario.js
+import React, { useState, useEffect, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
+import Card from "../components/Card";
 import PageHeader from "../components/PageHeader";
 import DataGrid from "../components/DataGrid";
 import AdvancedPagination from "../components/AdvancedPagination";
-import { mockUsers } from "../../mockData";
-import { getNestedValue, sortData } from "../utils/dataUtils";
+import { getUsers } from "../services/userService";
+import { useDebounce } from "../hooks/useDebounce";
 
-const userColumns = [
-  { key: "id", label: "ID", sortable: true, width: "80px" },
-  { key: "name", label: "Nombre", sortable: true },
-  { key: "email", label: "Email", sortable: true },
-  { key: "address.city", label: "Ciudad", sortable: true },
-  { key: "company.name", label: "Compañía", sortable: true },
+const userColumnsGrid = [
+  { key: "ci", label: "CI", sortable: true, width: "80px" },
+  { key: "first_name", label: "Nombres", sortable: true },
+  { key: "last_name", label: "Apellidos", sortable: true },
+  { key: "correo", label: "Correo", sortable: true },
+  { key: "tipo", label: "Tipo", sortable: true },
+  { key: "estado", label: "Estado", sortable: true },
+];
+
+const userColumnsCard = [
+  { key: "ci", label: "CI", sortable: true, width: "80px" },
+  { key: "first_name", label: "Nombres", sortable: true },
+  { key: "last_name", label: "Apellidos", sortable: true },
+  { key: "correo", label: "Correo", sortable: true },
+  { key: "fecha_nacimiento", label: "Fecha de Nacimiento", sortable: true },
+  { key: "tipo", label: "Tipo", sortable: true },
+  { key: "estado", label: "Estado", sortable: true },
 ];
 
 const GestionarUsuario = () => {
+  // Estado principal de la UI
   const [loading, setLoading] = useState(true);
-  const [allData, setAllData] = useState([]);
+  const [users, setUsers] = useState([]);
   const [error, setError] = useState(null);
-
-  const [searchTerm, setSearchTerm] = useState("");
-  const [sortConfig, setSortConfig] = useState({
-    key: "id",
-    direction: "ascending",
-  });
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(20);
   const [view, setView] = useState("grid");
-  const [breadcrumbs, setBreadcrumbs] = useState([
-    { label: "Usuarios", link: "/users" },
-    { label: "Listado" },
-  ]);
+  const [pagination, setPagination] = useState(null);
 
-  // --- EFECTOS ---
-  useEffect(() => {
-    // Simula la carga de datos desde una API
+  // Hook para sincronizar el estado con los parámetros de la URL
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // --- EXTRACCIÓN DE PARÁMETROS DE LA URL ---
+  const page = parseInt(searchParams.get("page") || "1", 10);
+  const pageSize = parseInt(searchParams.get("page_size") || "20", 10);
+  const search = searchParams.get("search") || "";
+  const ordering = searchParams.get("ordering") || "id"; // Orden por defecto
+
+  // Estado local para el input de búsqueda (para debouncing)
+  const [searchTerm, setSearchTerm] = useState(search);
+  const debouncedSearch = useDebounce(searchTerm, 300); // 300ms debounce
+
+  // --- EFECTO PRINCIPAL PARA CARGAR DATOS ---
+  const fetchUsers = useCallback(async () => {
     setLoading(true);
-    setTimeout(() => {
-      setAllData(mockUsers);
+    setError(null);
+    try {
+      // Construir el objeto de ordenamiento para la API
+      const apiOrdering = ordering.startsWith("-")
+        ? `-${ordering.substring(1)}`
+        : ordering;
+
+      const data = await getUsers({
+        page,
+        pageSize,
+        search: debouncedSearch,
+        ordering: apiOrdering,
+      });
+
+      setUsers(data.results);
+      setPagination(data.pagination);
+    } catch (err) {
+      setError(err.message);
+    } finally {
       setLoading(false);
-    }, 1000); // 1 segundo de delay
-  }, []);
-
-  // --- DATOS MEMOIZADOS (PARA RENDIMIENTO) ---
-  const filteredData = useMemo(() => {
-    if (!searchTerm) return allData;
-    return allData.filter(
-      (user) =>
-        Object.values(user).some((value) =>
-          String(value).toLowerCase().includes(searchTerm.toLowerCase())
-        ) ||
-        String(user.address.city)
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase()) ||
-        String(user.company.name)
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase())
-    );
-  }, [allData, searchTerm]);
-
-  const sortedData = useMemo(() => {
-    return sortData(filteredData, sortConfig);
-  }, [filteredData, sortConfig]);
-
-  const paginatedData = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    return sortedData.slice(startIndex, startIndex + itemsPerPage);
-  }, [sortedData, currentPage, itemsPerPage]);
-
-  const totalPages = Math.ceil(sortedData.length / itemsPerPage);
-
-  // --- HANDLERS ---
-  const handleSort = (key) => {
-    let direction = "ascending";
-    if (sortConfig.key === key && sortConfig.direction === "ascending") {
-      direction = "descending";
     }
-    setSortConfig({ key, direction });
-    setCurrentPage(1);
+  }, [page, pageSize, debouncedSearch, ordering]); // Dependencias
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]); // El efecto se dispara cuando cambia la función fetchUsers
+
+  // Actualizar la URL cuando cambia el término de búsqueda con debounce
+  useEffect(() => {
+    updateURL("search", debouncedSearch, true);
+  }, [debouncedSearch]);
+
+  // --- HANDLERS QUE ACTUALIZAN LA URL ---
+  const updateURL = (key, value, replace = false) => {
+    setSearchParams(
+      (prev) => {
+        if (value) {
+          prev.set(key, value);
+        } else {
+          prev.delete(key);
+        }
+        // Si estamos buscando, siempre volvemos a la página 1
+        if (replace) {
+          prev.set("page", "1");
+        }
+        return prev;
+      },
+      { replace: true }
+    );
+  };
+
+  const handleSort = (key) => {
+    const newOrdering = ordering === key ? `-${key}` : key;
+    updateURL("ordering", newOrdering);
   };
 
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
-    setCurrentPage(1);
   };
 
-  const handleItemsPerPageChange = (value) => {
-    setItemsPerPage(value);
-    setCurrentPage(1);
+  const handlePageChange = (newPage) => {
+    updateURL("page", newPage);
   };
 
   return (
     <div style={{ padding: "0 var(--spacing-xl)" }}>
       <PageHeader
         title="Gestión de Usuarios"
-        breadcrumbs={breadcrumbs}
         searchTerm={searchTerm}
         onSearchChange={handleSearchChange}
         currentView={view}
@@ -101,24 +126,46 @@ const GestionarUsuario = () => {
         onAdd={() => alert("Añadir...")}
         onReport={() => alert("Reporte...")}
       />
-      <DataGrid
-        loading={loading}
-        error={error}
-        data={paginatedData}
-        columns={userColumns}
-        sortConfig={sortConfig}
-        onSort={handleSort}
-        onEdit={(user) => alert(`Editando ${user.name}`)}
-        onDelete={(id) => alert(`Eliminando ID ${id}`)}
-      />
-      {!loading && sortedData.length > 0 && (
+      {/* CONDICIONAL PARA DIFERENTES VISTAS */}
+      {view === "grid" ? (
+        <DataGrid
+          loading={loading}
+          error={error}
+          data={users}
+          columns={userColumnsGrid}
+          sortConfig={{
+            key: ordering.replace("-", ""),
+            direction: ordering.startsWith("-") ? "descending" : "ascending",
+          }}
+          onSort={handleSort}
+          onEdit={(user) => alert(`Editando ${user.first_name}`)}
+          onDelete={(id) => alert(`Eliminando ID ${id}`)}
+        />
+      ) : (
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+            gap: "var(--spacing-lg)",
+          }}
+        >
+          {users.map((user) => (
+            <Card
+              key={user.id}
+              title={`${user.first_name} ${user.last_name}`}
+              columns={userColumnsCard}
+              data={user}
+            />
+          ))}
+        </div>
+      )}
+      {!loading && pagination && users.length > 0 && (
         <AdvancedPagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          totalItems={sortedData.length}
-          itemsPerPage={itemsPerPage}
-          onPageChange={setCurrentPage}
-          onItemsPerPageChange={handleItemsPerPageChange}
+          currentPage={pagination.current_page}
+          totalPages={pagination.total_pages}
+          totalItems={pagination.total_items}
+          itemsPerPage={pageSize}
+          onPageChange={handlePageChange}
         />
       )}
     </div>

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { User, Lock } from "lucide-react";
-import logo from '../assets/logo.png';
+import logo from "../assets/logo.png";
 import "../styles/Login.css";
 
 const Login = () => {
@@ -10,6 +10,7 @@ const Login = () => {
     ci: "",
     password: "",
   });
+  const [error, setError] = useState(null);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -19,10 +20,50 @@ const Login = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Datos de login:", formData);
-    navigate("/adminlayout");
+    setError(null);
+
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}login/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) {
+        throw new Error("CI o contraseña incorrectos");
+      }
+
+      const data = await response.json();
+
+      // Guardar token en localStorage (para usarlo luego en fetchs protegidos)
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify(data));
+
+      // Redirigir según el tipo de usuario
+      switch (data.tipo) {
+        case "Administrador":
+          navigate("/adminlayout");
+          break;
+        case "Residente":
+        case "Copropietario":
+          navigate("/crlayout");
+          break;
+        case "Guardia":
+          navigate("/guardialayout");
+          break;
+        case "Trabajador":
+          navigate("/trabajadorlayout");
+          break;
+        default:
+          setError("Tipo de usuario no reconocido");
+      }
+    } catch (err) {
+      setError(err.message);
+    }
   };
 
   return (
@@ -30,11 +71,7 @@ const Login = () => {
       <div className="login-card">
         {/* Logo */}
         <div className="logo-container">
-          <img
-            src={logo}
-            alt="Condominio Inteligente"
-            className="logo"
-          />
+          <img src={logo} alt="Condominio Inteligente" className="logo" />
         </div>
 
         {/* Título */}
@@ -75,18 +112,14 @@ const Login = () => {
             />
           </div>
 
+          {/* Error */}
+          {error && <p className="error-message">{error}</p>}
+
           {/* Botón de Login */}
           <button type="submit" className="login-button">
             Ingresar
           </button>
         </form>
-
-        {/* Link de Registro */}
-        <div className="register-link">
-          <a href="/registro" className="register-text">
-            ¿No tienes cuenta? <span>Regístrate</span>
-          </a>
-        </div>
       </div>
     </div>
   );

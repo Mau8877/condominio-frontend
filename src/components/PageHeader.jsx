@@ -23,13 +23,13 @@ const PageHeader = ({
               className={`toggle-button ${currentView === 'grid' ? 'active' : ''}`} 
               onClick={() => onViewChange('grid')}
             >
-              <LayoutGrid size={20} />
+              <List size={20} />
             </button>
             <button 
               className={`toggle-button ${currentView === 'card' ? 'active' : ''}`} 
               onClick={() => onViewChange('card')}
             >
-              <List size={20} />
+              <LayoutGrid size={20} />
             </button>
           </div>
           <button className="page-header-action-button secondary" onClick={onReport}>
