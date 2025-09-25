@@ -115,74 +115,47 @@ const CrearEditarUsuario = () => {
   const [formData, setFormData] = useState({});
   const [selectedUserType, setSelectedUserType] = useState("");
 
-  // Cargar datos en modo edición - VERSIÓN CORREGIDA Y SIMPLIFICADA
+  const [originalUserType, setOriginalUserType] = useState("");
+
   useEffect(() => {
     const loadUserData = async () => {
-      if (isEditing) {
-        setLoading(true);
-        try {
-          // 1. Primero obtener los datos básicos del usuario
-          const baseUser = await getUserById(id);
-          const userType = baseUser.tipo;
-          setSelectedUserType(userType);
-
-          console.log("📋 Datos básicos cargados:", baseUser);
-          console.log("🔍 Tipo de usuario:", userType);
-
-          // 2. Para tipos con datos específicos, obtener el ID específico primero
-          if (
-            [
-              "Trabajador",
-              "Guardia",
-              "Administrador",
-              "Copropietario",
-              "Residente",
-            ].includes(userType)
-          ) {
-            try {
-              // Obtener el ID específico del registro
-              const specificId = await getSpecificIdByUserId(id, userType);
-              console.log("🔑 ID específico encontrado:", specificId);
-
-              // Luego obtener los datos completos con el ID específico
-              const specificData = await getSpecificUserById(
-                specificId,
-                userType
-              );
-              console.log("📋 Datos específicos cargados:", specificData);
-
-              // Combinar datos
-              const combinedData = {
-                ...baseUser,
-                ...specificData,
-              };
-
-              setFormData(combinedData);
-            } catch (specificError) {
-              console.warn(
-                "No se pudieron cargar datos específicos, usando datos básicos:",
-                specificError
-              );
-              setFormData(baseUser);
-            }
-          } else {
-            // Para tipos sin datos específicos
-            setFormData(baseUser);
-          }
-        } catch (error) {
-          console.error("Error al cargar usuario:", error);
-          setMessage({
-            type: "error",
-            text: "No se pudieron cargar los datos del usuario.",
-            closable: true,
-          });
-        } finally {
-          setLoading(false);
-        }
-      } else {
-        // Modo creación
+      if (!isEditing) {
         setSelectedUserType("Residente");
         setFormData({ tipo: "Residente" });
+        return;
+      }
+
+      setLoading(true);
+      try {
+        const baseUser = await getUserById(id);
+        const userType = baseUser.tipo;
+
+        // PASO 2: Guardar el tipo de usuario original al cargar
+        setOriginalUserType(userType);
+        setSelectedUserType(userType);
+
+        if (
+          [
+            "Trabajador",
+            "Guardia",
+            "Administrador",
+            "Copropietario",
+            "Residente",
+          ].includes(userType)
+        ) {
+          const combinedData = await getSpecificUserById(id, userType);
+          setFormData(combinedData);
+        } else {
+          setFormData(baseUser);
+        }
+      } catch (error) {
+        console.error("Error al cargar datos del usuario:", error);
+        setMessage({
+          type: "error",
+          text: "No se pudieron cargar los datos del usuario.",
+        });
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -243,31 +216,19 @@ const CrearEditarUsuario = () => {
     setMessage(null);
 
     try {
-      const userType = submittedData.tipo || selectedUserType;
+      const newUserType = submittedData.tipo || selectedUserType;
       const successText = isEditing
         ? "Usuario actualizado con éxito"
         : "Usuario creado con éxito";
 
       if (isEditing) {
-        const oldUserType = formData.tipo;
+        // PASO 3: Usar el estado original para determinar el tipo antiguo
+        const oldUserType = originalUserType;
 
-        if (
-          [
-            "Administrador",
-            "Copropietario",
-            "Residente",
-            "Trabajador",
-            "Guardia",
-          ].includes(userType)
-        ) {
-          await updateSpecificUser(id, submittedData, userType, oldUserType);
-        } else {
-          if (submittedData.password === "") {
-            delete submittedData.password;
-          }
-          await updateUser(id, submittedData);
-        }
+        // El resto de la lógica ya funciona porque ahora oldUserType y newUserType serán diferentes
+        await updateSpecificUser(id, submittedData, newUserType, oldUserType);
       } else {
+        // La lógica de creación se mantiene igual
         if (
           [
             "Administrador",
@@ -275,18 +236,16 @@ const CrearEditarUsuario = () => {
             "Residente",
             "Trabajador",
             "Guardia",
-          ].includes(userType)
+          ].includes(newUserType)
         ) {
-          await createSpecificUser(submittedData, userType);
+          await createSpecificUser(submittedData, newUserType);
         } else {
           const userResponse = await createUser(submittedData);
-          if (userType !== "Usuario") {
-            await createSpecificRecord(
-              userResponse.id,
-              userType,
-              submittedData
-            );
-          }
+          await createSpecificRecord(
+            userResponse.id,
+            newUserType,
+            submittedData
+          );
         }
       }
 
@@ -306,9 +265,6 @@ const CrearEditarUsuario = () => {
       setLoading(false);
     }
   };
-
-  console.log("🎯 Datos actuales del formulario:", formData);
-  console.log("📝 Campos del formulario:", userFields);
 
   return (
     <Form

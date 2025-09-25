@@ -185,139 +185,183 @@ export const createSpecificUser = async (userData, userType) => {
 };
 
 /**
- * Crea el registro específico (Copropietario, Administrador, etc.) después de crear el Usuario
+ * Crea el registro específico (Copropietario, Administrador, etc.)
+ * Se usa tanto para creación como para migración.
  */
 export const createSpecificRecord = async (
   usuarioId,
   userType,
   additionalData = {}
 ) => {
+  let endpoint = "";
+  // Ya no necesitamos primaryKeyField
+  let requestData = {};
+
+  // ASIGNA EL ID DEL USUARIO. ESTA ES LA PARTE CLAVE.
+  // El backend siempre espera el campo 'usuario' para la relación.
+  requestData.usuario = usuarioId;
+
+  switch (userType) {
+    case "Copropietario":
+      endpoint = "/copropietarios/";
+      // No se necesita nada más
+      break;
+    case "Administrador":
+      endpoint = "/administradores/";
+      // No se necesita nada más
+      break;
+    case "Residente":
+      endpoint = "/residentes/";
+      // No se necesita nada más
+      break;
+    case "Trabajador":
+      endpoint = "/trabajadores/";
+      // Añadir campos adicionales para este tipo
+      requestData.tipo = additionalData.tipo_trabajador || "General";
+      break;
+    case "Guardia":
+      endpoint = "/guardias/";
+      // Añadir campos adicionales para este tipo
+      requestData.turno = additionalData.turno || "Diurno";
+      break;
+    default:
+      console.warn(
+        `El tipo de usuario ${userType} no requiere un registro específico.`
+      );
+      return null;
+  }
+
+  // Ya no necesitas esta línea: requestData[primaryKeyField] = usuarioId;
+
   try {
-    let endpoint = "";
-    let requestData = {};
-
-    switch (userType) {
-      case "Copropietario":
-        endpoint = "/copropietarios/";
-        requestData = { usuario_id: usuarioId };
-        break;
-      case "Administrador":
-        endpoint = "/administradores/";
-        requestData = { usuario_id: usuarioId };
-        break;
-      case "Residente":
-        endpoint = "/residentes/";
-        requestData = { usuario_id: usuarioId };
-        break;
-      case "Trabajador":
-        endpoint = "/trabajadores/";
-        requestData = {
-          usuario_id: usuarioId,
-          tipo: additionalData.tipo_trabajador || "General",
-        };
-        break;
-      case "Guardia":
-        endpoint = "/guardias/";
-        requestData = {
-          usuario_id: usuarioId,
-          turno: additionalData.turno || "Diurno",
-        };
-        break;
-      default:
-        return null;
-    }
-
-    console.log("📝 Creando registro específico en:", endpoint, requestData);
+    console.log(
+      `📝 Creando nuevo registro en ${endpoint} con payload:`,
+      requestData
+    );
     const response = await apiClient.post(endpoint, requestData);
     return response.data;
   } catch (error) {
     console.error(
-      "❌ Error creando registro específico:",
+      `❌ Error creando registro de ${userType}:`,
       error.response?.data
     );
-    throw new Error(`No se pudo crear el registro de ${userType}`);
+    throw new Error(`No se pudo crear el nuevo rol de ${userType}.`);
   }
 };
 
 /**
- * Actualiza un usuario específico
+ * Elimina un registro de una tabla específica (Guardia, Trabajador, etc.)
+ * basado en el ID del usuario.
+ * @param {string} userId - El ID del usuario, que también es la PK del registro específico.
+ * @param {string} userType - El tipo de usuario a eliminar (ej: "Copropietario").
  */
+const deleteSpecificRecord = async (userId, userType) => {
+  let endpoint = "";
+  switch (userType) {
+    case "Administrador":
+      endpoint = `/administradores/${userId}/`;
+      break;
+    case "Copropietario":
+      endpoint = `/copropietarios/${userId}/`;
+      break;
+    case "Residente":
+      endpoint = `/residentes/${userId}/`;
+      break;
+    case "Trabajador":
+      endpoint = `/trabajadores/${userId}/`;
+      break;
+    case "Guardia":
+      endpoint = `/guardias/${userId}/`;
+      break;
+    default:
+      console.warn(
+        `No hay registro específico que eliminar para el tipo: ${userType}`
+      );
+      return;
+  }
+
+  try {
+    console.log(
+      `🗑️ Eliminando registro antiguo de ${userType} para el usuario ${userId}`
+    );
+    await apiClient.delete(endpoint);
+  } catch (error) {
+    if (error.response && error.response.status === 404) {
+      // Si el registro no existía, no es un error crítico.
+      console.warn(
+        `No se encontró registro antiguo de ${userType} para eliminar. Se continúa con la migración.`
+      );
+    } else {
+      console.error(
+        `❌ Falló la eliminación del registro antiguo de ${userType}:`,
+        error.response?.data
+      );
+      throw new Error(`No se pudo eliminar el rol anterior de ${userType}.`);
+    }
+  }
+};
+
 export const updateSpecificUser = async (
   userId,
   userData,
-  userType,
+  newUserType,
   oldUserType
 ) => {
-  try {
+  const typeChanged = newUserType !== oldUserType;
+
+  const baseUserData = {
+    ci: userData.ci,
+    first_name: userData.first_name,
+    last_name: userData.last_name,
+    correo: userData.correo,
+    fecha_nacimiento: userData.fecha_nacimiento,
+    telefono: userData.telefono,
+    sexo: userData.sexo,
+    tipo: newUserType,
+  };
+
+  if (userData.password && userData.password.trim() !== "") {
+    baseUserData.password = userData.password;
+  }
+
+  if (typeChanged) {
+    // --- LÓGICA DE MIGRACIÓN ---
     console.log(
-      `🔄 Actualizando ${userType} con ID usuario: ${userId}`,
-      userData
+      `🔄 Migrando usuario ${userId} de ${oldUserType} a ${newUserType}`
     );
+    await deleteSpecificRecord(userId, oldUserType);
+    await updateUser(userId, baseUserData);
+    await createSpecificRecord(userId, newUserType, userData);
+  } else {
+    // --- LÓGICA DE ACTUALIZACIÓN ESTÁNDAR ---
+    console.log(`🔧 Actualizando usuario ${userId} (tipo ${newUserType})`);
+    await updateUser(userId, baseUserData);
 
-    // Si el tipo de usuario cambió, manejar migración
-    if (userType !== oldUserType) {
-      console.log(`🔄 Cambio de tipo: ${oldUserType} -> ${userType}`);
-      await updateUser(userId, { tipo: userType });
-      if (["Trabajador", "Guardia"].includes(userType)) {
-        await createSpecificRecord(userId, userType, userData);
-      }
-      return;
+    let specificEndpoint = "";
+    let specificPayload = {};
+
+    if (newUserType === "Trabajador") {
+      specificEndpoint = `/trabajadores/${userId}/`;
+      specificPayload = { tipo: userData.tipo_trabajador };
+    } else if (newUserType === "Guardia") {
+      specificEndpoint = `/guardias/${userId}/`;
+      specificPayload = { turno: userData.turno };
     }
 
-    // 1. Primero actualizar el usuario base
-    const userUpdateData = {
-      ci: userData.ci,
-      first_name: userData.first_name,
-      last_name: userData.last_name,
-      correo: userData.correo,
-      fecha_nacimiento: userData.fecha_nacimiento,
-      telefono: userData.telefono,
-      sexo: userData.sexo,
-      tipo: userData.tipo,
-    };
-
-    if (userData.password && userData.password.trim() !== "") {
-      userUpdateData.password = userData.password;
-    }
-
-    await updateUser(userId, userUpdateData);
-
-    // 2. Si tenemos specific_id, actualizar datos específicos
-    if (userData.specific_id) {
-      let endpoint;
-      let dataToSend = {};
-
-      switch (userType) {
-        case "Trabajador":
-          endpoint = `/trabajadores/${userData.specific_id}/`;
-          dataToSend = { tipo: userData.tipo_trabajador };
-          break;
-        case "Guardia":
-          endpoint = `/guardias/${userData.specific_id}/`;
-          dataToSend = { turno: userData.turno };
-          break;
-        case "Administrador":
-        case "Copropietario":
-        case "Residente":
-          // No necesitan actualización específica
-          return;
-        default:
-          throw new Error(`Tipo de usuario no soportado: ${userType}`);
+    if (specificEndpoint) {
+      try {
+        await apiClient.patch(specificEndpoint, specificPayload);
+      } catch (error) {
+        if (error.response && error.response.status === 404) {
+          console.warn(
+            `Registro específico para ${newUserType} no encontrado, se creará uno nuevo.`
+          );
+          await createSpecificRecord(userId, newUserType, userData);
+        } else {
+          throw error;
+        }
       }
-
-      if (Object.keys(dataToSend).length > 0) {
-        console.log(`🔧 Actualizando ${userType} en: ${endpoint}`, dataToSend);
-        const response = await apiClient.patch(endpoint, dataToSend);
-        console.log(`✅ ${userType} actualizado:`, response.data);
-      }
-    } else {
-      console.log(
-        `ℹ️ No hay specific_id para actualizar datos específicos de ${userType}`
-      );
     }
-  } catch (error) {
-    console.error(`❌ Error updating ${userType}:`, error);
-    throw error;
   }
 };
 
