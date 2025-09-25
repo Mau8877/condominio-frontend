@@ -3,7 +3,10 @@ import Login from "./pages/Login";
 import HomePage from "./home/HomePage";
 import AdminLayout from "./layouts/AdminLayout";
 import AdminDashboard from "./pages/AdminDashboard";
+
 import GestionarUsuario from "./pages/GestionarUsuario";
+import CrearEditarUsuario from './pages/CrearEditarUsuario';
+
 import GestionarFamilia from "./pages/GestionarFamilia";
 import GestionarMascota from "./pages/GestionarMascota";
 import GestionarVehiculo from "./pages/GestionarVehiculo";
@@ -40,6 +43,9 @@ function App() {
           <Route index element={<AdminDashboard />} />
           {/* Rutas hijas - Gestión Usuarios */}
           <Route path="gestionar-usuario" element={<GestionarUsuario />} />
+          <Route path="crear" element={<CrearEditarUsuario />} /> 
+          <Route path="editar/:id" element={<CrearEditarUsuario />} />
+
           <Route path="gestionar-familia" element={<GestionarFamilia />} />
           <Route path="gestionar-mascota" element={<GestionarMascota />} />
           <Route path="gestionar-vehiculo" element={<GestionarVehiculo />} />

@@ -1,12 +1,13 @@
 // src/pages/GestionarUsuario.js
 import React, { useState, useEffect, useCallback } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import Card from "../components/Card";
 import PageHeader from "../components/PageHeader";
 import DataGrid from "../components/DataGrid";
 import AdvancedPagination from "../components/AdvancedPagination";
-import { getUsers } from "../services/userService";
+import { getUsers, deleteUser } from "../services/userService";
 import { useDebounce } from "../hooks/useDebounce";
+import { User, Shield, BadgeInfo } from "lucide-react";
 
 const userColumnsGrid = [
   { key: "ci", label: "CI", sortable: true, width: "80px" },
@@ -18,14 +19,101 @@ const userColumnsGrid = [
 ];
 
 const userColumnsCard = [
-  { key: "ci", label: "CI", sortable: true, width: "80px" },
-  { key: "first_name", label: "Nombres", sortable: true },
-  { key: "last_name", label: "Apellidos", sortable: true },
-  { key: "correo", label: "Correo", sortable: true },
-  { key: "fecha_nacimiento", label: "Fecha de Nacimiento", sortable: true },
-  { key: "tipo", label: "Tipo", sortable: true },
-  { key: "estado", label: "Estado", sortable: true },
+  { key: "ci", label: "CI", icon: "IdCard" },
+  { key: "first_name", label: "Nombres", icon: "User" },
+  { key: "last_name", label: "Apellidos", icon: "User" },
+  { key: "tipo", label: "Tipo", icon: "BadgeInfo" },
+  { key: "estado", label: "Estado", icon: "Shield" },
 ];
+
+const userColumnsCardExtended = [
+  { key: "correo", label: "Correo", icon: "Mail" },
+  { key: "fecha_nacimiento", label: "Fecha de Nacimiento", icon: "Calendar" },
+  { key: "telefono", label: "Teléfono", icon: "Phone" },
+  { key: "sexo", label: "Sexo", icon: "User" },
+];
+
+const userFields = [
+  {
+    key: "ci",
+    label: "Cédula de Identidad",
+    type: "text",
+    required: true
+  },
+  {
+    key: "first_name",
+    label: "Nombres",
+    type: "text",
+    required: true,
+    placeholder: "Ingrese los nombres"
+  },
+  {
+    key: "last_name", 
+    label: "Apellidos",
+    type: "text",
+    required: true
+  },
+  {
+    key: "password",
+    label: "Contraseña",
+    type: "password",
+    required: true,
+    placeholder: "Ingrese una contraseña segura"
+  },
+  {
+    key: "correo",
+    label: "Email",
+    type: "email",
+    required: true
+  },
+  {
+    key: "fecha_nacimiento",
+    label: "Fecha de Nacimiento",
+    type: "date",
+    required: true
+  },
+  {
+    key: "telefono",
+    label: "Teléfono",
+    type: "text",
+    required: true,
+    placeholder: "Ingrese el teléfono"
+  },
+  {
+    key: "sexo",
+    label: "Sexo",
+    type: "select",
+    required: true,
+    options: [
+      { value: "M", label: "Masculino" },
+      { value: "F", label: "Femenino" }
+    ]
+  },
+  {
+    key: "tipo",
+    label: "Tipo de Usuario",
+    type: "select",
+    required: true,
+    options: [
+      { value: "Administrador", label: "Administrador" },
+      { value: "Copropietario", label: "Copropietario" },
+      { value: "Residente", label: "Residente" },
+      { value: "Guardia", label: "Guardia" },
+      { value: "Trabajador", label: "Trabajador" }
+    ]
+  }
+];
+
+const getUserIcon = (userType) => {
+  const iconMap = {
+    Administrador: Shield,
+    Copropietario: User,
+    Residente: User,
+    Trabajador: BadgeInfo,
+    Guardia: Shield,
+  };
+  return iconMap[userType] || User;
+};
 
 const GestionarUsuario = () => {
   // Estado principal de la UI
@@ -34,6 +122,8 @@ const GestionarUsuario = () => {
   const [error, setError] = useState(null);
   const [view, setView] = useState("grid");
   const [pagination, setPagination] = useState(null);
+
+  const navigate = useNavigate();
 
   // Hook para sincronizar el estado con los parámetros de la URL
   const [searchParams, setSearchParams] = useSearchParams();
@@ -115,6 +205,26 @@ const GestionarUsuario = () => {
     updateURL("page", newPage);
   };
 
+  const handleAdd = () => {
+    navigate("/adminlayout/crear");
+  };
+
+  const handleEdit = (user) => {
+    navigate(`/adminlayout/editar/${user.id}`);
+  };
+
+  const handleDelete = async (id) => {
+  if (window.confirm("¿Está seguro de eliminar este usuario?")) {
+    try {
+      await deleteUser(id); 
+      alert("Usuario eliminado exitosamente");
+      fetchUsers(); 
+    } catch (error) {
+      alert("Error al eliminar usuario: " + error.message);
+    }
+  }
+}
+
   return (
     <div style={{ padding: "0 var(--spacing-xl)" }}>
       <PageHeader
@@ -123,7 +233,7 @@ const GestionarUsuario = () => {
         onSearchChange={handleSearchChange}
         currentView={view}
         onViewChange={setView}
-        onAdd={() => alert("Añadir...")}
+        onAdd={handleAdd}
         onReport={() => alert("Reporte...")}
       />
       {/* CONDICIONAL PARA DIFERENTES VISTAS */}
@@ -138,8 +248,8 @@ const GestionarUsuario = () => {
             direction: ordering.startsWith("-") ? "descending" : "ascending",
           }}
           onSort={handleSort}
-          onEdit={(user) => alert(`Editando ${user.first_name}`)}
-          onDelete={(id) => alert(`Eliminando ID ${id}`)}
+          onEdit={handleEdit} 
+          onDelete={handleDelete}
         />
       ) : (
         <div
@@ -152,9 +262,14 @@ const GestionarUsuario = () => {
           {users.map((user) => (
             <Card
               key={user.id}
-              title={`${user.first_name} ${user.last_name}`}
-              columns={userColumnsCard}
               data={user}
+              columns={userColumnsCard}
+              extendedColumns={userColumnsCardExtended}
+              icon={getUserIcon(user.tipo)}
+              titleField="first_name"
+              subtitleField="last_name"
+              onEdit={() => handleEdit(user)}
+              onDelete={() => handleDelete(user.id)}
             />
           ))}
         </div>
