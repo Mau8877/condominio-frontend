@@ -17,7 +17,10 @@ import ReportarInfraccion from "./pages/ReportarInfraccion";
 import GenerarTarea from "./pages/GenerarTarea";
 import ChecklistTareas from "./pages/ChecklistTareas";
 import GenerarAviso from "./pages/GenerarAviso";
+
 import GestionarCalles from "./pages/GestionarCalles";
+import CrearEditarCalle from "./pages/CrearEditarCalle";
+
 import GestionarCasas from "./pages/GestionarCasas";
 import GestionarInfraestructura from "./pages/GestionarInfraestructura";
 import RealizarReserva from "./pages/RealizarReserva";
@@ -43,8 +46,8 @@ function App() {
           <Route index element={<AdminDashboard />} />
           {/* Rutas hijas - Gestión Usuarios */}
           <Route path="gestionar-usuario" element={<GestionarUsuario />} />
-          <Route path="crear" element={<CrearEditarUsuario />} /> 
-          <Route path="editar/:id" element={<CrearEditarUsuario />} />
+          <Route path="crear-usuario" element={<CrearEditarUsuario />} /> 
+          <Route path="editar-usuario/:id" element={<CrearEditarUsuario />} />
 
           <Route path="gestionar-familia" element={<GestionarFamilia />} />
           <Route path="gestionar-mascota" element={<GestionarMascota />} />
@@ -69,6 +72,9 @@ function App() {
 
           {/* Rutas hijas - Viviendas e Infrastructura */}
           <Route path="gestionar-calles" element={<GestionarCalles />} />
+          <Route path="crear-calle" element={<CrearEditarCalle />} /> 
+          <Route path="editar-calle/:id" element={<CrearEditarCalle />} />
+
           <Route path="gestionar-casas" element={<GestionarCasas />} />
           <Route
             path="gestionar-infraestructura"

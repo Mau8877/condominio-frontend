@@ -1,4 +1,3 @@
-// src/pages/GestionarUsuario.js
 import React, { useState, useEffect, useCallback } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import Card from "../components/Card";
@@ -206,11 +205,11 @@ const GestionarUsuario = () => {
   };
 
   const handleAdd = () => {
-    navigate("/adminlayout/crear");
+    navigate("/adminlayout/crear-usuario");
   };
 
   const handleEdit = (user) => {
-    navigate(`/adminlayout/editar/${user.id}`);
+    navigate(`/adminlayout/editar-usuario/${user.id}`);
   };
 
   const handleDelete = async (id) => {
