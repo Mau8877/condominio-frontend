@@ -174,7 +174,6 @@ export const createSpecificUser = async (userData, userType) => {
         throw new Error(`Tipo de usuario no soportado: ${userType}`);
     }
 
-    console.log("👤 Creando usuario específico en", endpoint, requestData);
     const response = await apiClient.post(endpoint, requestData);
     return response.data;
   } catch (error) {
@@ -234,10 +233,6 @@ export const createSpecificRecord = async (
   // Ya no necesitas esta línea: requestData[primaryKeyField] = usuarioId;
 
   try {
-    console.log(
-      `📝 Creando nuevo registro en ${endpoint} con payload:`,
-      requestData
-    );
     const response = await apiClient.post(endpoint, requestData);
     return response.data;
   } catch (error) {
@@ -281,9 +276,6 @@ const deleteSpecificRecord = async (userId, userType) => {
   }
 
   try {
-    console.log(
-      `🗑️ Eliminando registro antiguo de ${userType} para el usuario ${userId}`
-    );
     await apiClient.delete(endpoint);
   } catch (error) {
     if (error.response && error.response.status === 404) {
@@ -326,15 +318,11 @@ export const updateSpecificUser = async (
 
   if (typeChanged) {
     // --- LÓGICA DE MIGRACIÓN ---
-    console.log(
-      `🔄 Migrando usuario ${userId} de ${oldUserType} a ${newUserType}`
-    );
     await deleteSpecificRecord(userId, oldUserType);
     await updateUser(userId, baseUserData);
     await createSpecificRecord(userId, newUserType, userData);
   } else {
     // --- LÓGICA DE ACTUALIZACIÓN ESTÁNDAR ---
-    console.log(`🔧 Actualizando usuario ${userId} (tipo ${newUserType})`);
     await updateUser(userId, baseUserData);
 
     let specificEndpoint = "";
@@ -412,7 +400,6 @@ export const migrateUserType = async (
       }
 
       if (oldEndpoint) {
-        console.log("🗑️ Eliminando registro antiguo:", oldEndpoint);
         await apiClient.delete(oldEndpoint);
       }
     }
@@ -432,8 +419,6 @@ export const migrateUserType = async (
     ) {
       await createSpecificRecord(usuarioBaseId, newUserType, userData);
     }
-
-    console.log("✅ Migración completada de", oldUserType, "a", newUserType);
   } catch (error) {
     console.error("❌ Error en migración:", error.response?.data);
     throw new Error(
@@ -471,8 +456,6 @@ export const getSpecificUserById = async (specificId, userType) => {
 
     const response = await apiClient.get(endpoint);
     const specificData = response.data;
-
-    console.log(`📋 Datos específicos de ${userType}:`, specificData);
 
     // Combinar datos del usuario con datos específicos
     const combinedData = {

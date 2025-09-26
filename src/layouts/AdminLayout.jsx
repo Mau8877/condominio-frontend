@@ -172,9 +172,9 @@ const menuPackages = [
 ];
 
 export default function AdminLayout() {
-  const usuario = JSON.parse(localStorage.getItem("usuario"));
-  const nombre = usuario.nombre;
-  const rol = usuario.rol.nombre;
+  const usuario = JSON.parse(localStorage.getItem("user"));
+  const nombre = usuario.fist_name;
+  const rol = usuario.tipo;
   return (
     <div className="AdminLayout-container">
       <Header

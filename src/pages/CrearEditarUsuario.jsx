@@ -228,7 +228,6 @@ const CrearEditarUsuario = () => {
         // El resto de la lógica ya funciona porque ahora oldUserType y newUserType serán diferentes
         await updateSpecificUser(id, submittedData, newUserType, oldUserType);
       } else {
-        // La lógica de creación se mantiene igual
         if (
           [
             "Administrador",

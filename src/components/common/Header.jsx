@@ -3,7 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { Building, Settings, LogOut, User, UserPen } from "lucide-react";
 import "./styles/Header.css";
 
-export default function Header({ logo, title, userName, rol, navigation = "/" }) {
+export default function Header({
+  logo,
+  title,
+  userName,
+  rol,
+  navigation = "/",
+}) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
   const dropdownRef = useRef(null);
@@ -32,6 +38,8 @@ export default function Header({ logo, title, userName, rol, navigation = "/" })
   };
 
   const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
     setIsMenuOpen(false);
     navigate("/login");
   };
