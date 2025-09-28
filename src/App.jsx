@@ -22,6 +22,8 @@ import GestionarCalles from "./pages/GestionarCalles";
 import CrearEditarCalle from "./pages/CrearEditarCalle";
 
 import GestionarCasas from "./pages/GestionarCasas";
+import CrearEditarCasa from "./pages/CrearEditarCasa";
+
 import GestionarInfraestructura from "./pages/GestionarInfraestructura";
 import RealizarReserva from "./pages/RealizarReserva";
 import RealizarPago from "./pages/RealizarPago";
@@ -76,6 +78,9 @@ function App() {
           <Route path="editar-calle/:id" element={<CrearEditarCalle />} />
 
           <Route path="gestionar-casas" element={<GestionarCasas />} />
+          <Route path="crear-casa" element={<CrearEditarCasa />} /> 
+          <Route path="editar-casa/:id" element={<CrearEditarCasa />} />
+
           <Route
             path="gestionar-infraestructura"
             element={<GestionarInfraestructura />}

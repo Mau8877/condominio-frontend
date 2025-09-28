@@ -44,6 +44,7 @@ const FormField = ({ field, value, onChange, disabled }) => {
           required={field.required}
           disabled={disabled}
           rows={field.rows || 4}
+          readOnly={field.readOnly} // ← Agregar soporte para readOnly
         />
       </div>
     );
@@ -60,6 +61,7 @@ const FormField = ({ field, value, onChange, disabled }) => {
         placeholder={field.placeholder || ""}
         required={field.required}
         disabled={disabled}
+        readOnly={field.readOnly} // ← Agregar soporte para readOnly
       />
     </div>
   );

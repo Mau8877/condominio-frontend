@@ -1,45 +1,21 @@
 import React, { useState } from "react";
-import {
-  User,
-  Mail,
-  BadgeInfo,
-  Shield,
-  Calendar,
-  Phone,
-  IdCard,
-  Edit3,
-  Trash2,
-  ChevronDown,
-  ChevronUp,
-} from "lucide-react";
+import * as Icons from "lucide-react";
 import "./styles/Card.css";
-
-// Mapeo de iconos por nombre
-const iconComponents = {
-  User,
-  Mail,
-  BadgeInfo,
-  Shield,
-  Calendar,
-  Phone,
-  IdCard,
-  Edit3,
-  Trash2,
-};
 
 const Card = ({
   data = {},
   columns = [],
   extendedColumns = [],
-  icon: Icon = User,
-  titleField = "first_name", 
-  subtitleField = "last_name", 
+  icon: Icon = Icons.User, // ✅ default icon
+  titleField = "first_name",
+  subtitleField = "last_name",
   onEdit,
   onDelete,
   onClick,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
+  // Función para dar clases según estado
   const getStatusClass = (value) => {
     if (!value) return "";
     const val = value.toString().toLowerCase();
@@ -48,12 +24,17 @@ const Card = ({
     return "";
   };
 
-  // Función para obtener el componente de icono
+  // 🔑 Función que busca el icono dinámicamente
   const getIconComponent = (iconName) => {
-    return iconComponents[iconName] || User;
+    return Icons[iconName] || Icons.HelpCircle;
   };
 
-  // Obtener título y subtítulo dinámicamente
+  // 🔑 Función que obtiene valores anidados (ej: "dueño_info.nombre_completo")
+  const getValueByPath = (obj, path) => {
+    return path.split(".").reduce((acc, part) => acc?.[part], obj);
+  };
+
+  // 🔑 Obtener título y subtítulo dinámicamente
   const getDisplayTitle = () => {
     if (titleField && data[titleField]) return data[titleField];
     return "Usuario";
@@ -85,16 +66,21 @@ const Card = ({
               setIsExpanded(!isExpanded);
             }}
           >
-            {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+            {isExpanded ? (
+              <Icons.ChevronUp size={16} />
+            ) : (
+              <Icons.ChevronDown size={16} />
+            )}
           </button>
         )}
       </div>
 
-      {/* Contenido principal - siempre visible */}
+      {/* Contenido principal */}
       <div className="card-content">
         {columns.map((col, index) => {
           const FieldIcon = getIconComponent(col.icon);
-          const value = data[col.key] ?? "—";
+          const rawValue = getValueByPath(data, col.key);
+          const value = col.formatter ? col.formatter(rawValue) : rawValue ?? "—";
           const isStatus = col.key === "estado";
 
           return (
@@ -115,13 +101,14 @@ const Card = ({
         })}
       </div>
 
-      {/* Contenido extendido - estilo gris y compacto */}
+      {/* Contenido extendido */}
       {isExpanded && extendedColumns.length > 0 && (
         <div className="card-content-extended">
           <div className="extended-divider"></div>
           {extendedColumns.map((col, index) => {
             const FieldIcon = getIconComponent(col.icon);
-            const value = data[col.key] ?? "—";
+            const rawValue = getValueByPath(data, col.key);
+            const value = col.formatter ? col.formatter(rawValue) : rawValue ?? "—";
 
             return (
               <div key={index} className="card-field extended">
@@ -149,7 +136,7 @@ const Card = ({
                 onEdit(data);
               }}
             >
-              <Edit3 size={14} />
+              <Icons.Edit3 size={14} />
               <span>Editar</span>
             </button>
           )}
@@ -161,7 +148,7 @@ const Card = ({
                 onDelete(data.id);
               }}
             >
-              <Trash2 size={14} />
+              <Icons.Trash2 size={14} />
               <span>Eliminar</span>
             </button>
           )}
